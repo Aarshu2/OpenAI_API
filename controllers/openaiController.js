@@ -1,7 +1,9 @@
 // controllers/openaiController.js
 const openai = require('../config/openaiConfig');
 
-const generateMeta = async (title) => {
+const generateMeta = async (req, res) => {
+  const { title } = req.body
+
   const completion = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
     messages: [  
@@ -9,7 +11,6 @@ const generateMeta = async (title) => {
     ],
   });
 
-  console.log(completion.choices[0].message.content);
 
   const tags = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
@@ -19,21 +20,25 @@ const generateMeta = async (title) => {
     ],
   });
 
-  console.log(tags.choices[0].message.content);
+  res.status(200).json({
+    completion: completion.choices[0].message,
+    tags: tags.choices[0].message
+  })
 };
 
 
-const generateImage = async (desc) => {
+const generateImage = async (req, res) => {
   try {
-    // call the correct images endpoint
     const response = await openai.images.generate({
-      prompt: desc,
+      prompt: req.body.prompt,
       n: 1,
       size: '512x512',
     });
+    
+    res.json({
+      url: response.data[0].url
+    })
 
-    // the URL lives at response.data[0].url
-    console.log(response.data[0].url);
   } catch (err) {
     console.error('Error generating image:', err);
   }
